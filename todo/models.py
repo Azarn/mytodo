@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 from django.conf import settings
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
@@ -65,20 +65,30 @@ class Category(models.Model):
 
 class Todo(models.Model):
     user = models.ForeignKey(User)
-    category = models.ForeignKey(Category, blank=True, null=True, on_delete=models.SET_NULL)
+    category = models.ForeignKey(Category, blank=True, on_delete=models.DO_NOTHING)
     tags = models.ManyToManyField(Tag, blank=True)
     text = models.CharField(max_length=256, db_index=True)
     is_done = models.BooleanField(default=False, db_index=True)
-    deadline = models.DateTimeField(blank=True, db_index=True)
+    deadline = models.DateTimeField(null=True, blank=True, db_index=True)
 
     def mark_done(self, new_state):
         self.is_done = new_state
         self.save()
 
+    def reset_category(self):
+        self.category_id = None
+        self.save()
+
     def save(self, *args, **kwargs):
-        if not self.category:
+        if self.category_id is None:
             self.category = Category.get_or_create_default(self.user)
         super().save(*args, **kwargs)
+
+
+@receiver(pre_delete, sender=Category)
+def set_default_category_to_todo_set(sender, instance, **kwargs):
+    for todo in instance.todo_set.all():
+        todo.reset_category()
 
 
 @receiver((post_delete, post_save), sender=Todo)

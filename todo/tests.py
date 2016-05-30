@@ -39,9 +39,16 @@ class DefaultCategoryTestCase(TestCase):
         todo.save()
         self.assertFalse(self._check_exists())
 
-        todo.category = None
-        todo.save()
+        todo.reset_category()
         self.assertTrue(self._check_exists())
+
+        todo.category = test_category
+        todo.save()
+        self.assertFalse(self._check_exists())
+        test_category.delete()
+        self.assertTrue(self._check_exists())
+        todo = Todo.objects.get(pk=todo.pk)
+        self.assertEqual(todo.category, Category.get_default_category(todo.user))
 
         todo.delete()
         self.assertFalse(self._check_exists())

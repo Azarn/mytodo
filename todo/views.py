@@ -5,9 +5,19 @@ from .serializers import CategorySerializer, TagSerializer, TodoSerializer
 from .models import Category, Tag, Todo
 
 
+class GenericApiViewNoOptions(generics.GenericAPIView):
+    metadata_class = None
+
+    @property
+    def allowed_methods(self):
+        methods = super().allowed_methods
+        methods.remove('OPTIONS')
+        return methods
+
+
 class CategoryList(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
-                   generics.GenericAPIView):
+                   GenericApiViewNoOptions):
     serializer_class = CategorySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -27,7 +37,7 @@ class CategoryList(mixins.ListModelMixin,
 class CategoryDetail(mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin,
                      mixins.DestroyModelMixin,
-                     generics.GenericAPIView):
+                     GenericApiViewNoOptions):
     serializer_class = CategorySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -46,7 +56,7 @@ class CategoryDetail(mixins.RetrieveModelMixin,
 
 class TagList(mixins.ListModelMixin,
               mixins.CreateModelMixin,
-              generics.GenericAPIView):
+              GenericApiViewNoOptions):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -66,12 +76,51 @@ class TagList(mixins.ListModelMixin,
 class TagDetail(mixins.RetrieveModelMixin,
                 mixins.UpdateModelMixin,
                 mixins.DestroyModelMixin,
-                generics.GenericAPIView):
+                GenericApiViewNoOptions):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         return Tag.objects.filter(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+class TodoList(mixins.ListModelMixin,
+               mixins.CreateModelMixin,
+               GenericApiViewNoOptions):
+    serializer_class = TodoSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return Todo.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, args, kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class TodoDetail(mixins.RetrieveModelMixin,
+                 mixins.UpdateModelMixin,
+                 mixins.DestroyModelMixin,
+                 GenericApiViewNoOptions):
+    serializer_class = TodoSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return Todo.objects.filter(user=self.request.user)
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
