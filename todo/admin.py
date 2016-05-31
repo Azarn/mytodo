@@ -1,6 +1,21 @@
 from django.contrib import admin
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
 
-from .models import Todo, Category, Tag
+from .models import Todo, Category, Tag, Profile
+
+
+class ProfileInline(admin.StackedInline):
+    model = Profile
+    can_delete = False
+
+
+class UserAdmin(UserAdmin):
+    inlines = (ProfileInline, )
+
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
 
 class MembershipInline(admin.TabularInline):

@@ -5,7 +5,9 @@ from django.utils.html import format_html
 from django.conf import settings
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
+# from django.utils import timezone
 from rest_framework.authtoken.models import Token
+from timezone_field.fields import TimeZoneField
 
 
 def validate_color(value):
@@ -13,6 +15,11 @@ def validate_color(value):
         int(value, 16)
     except ValueError:
         raise ValidationError('{0} is not a hex color!'.format(value))
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, primary_key=True)
+    timezone = TimeZoneField(default=settings.TIME_ZONE)
 
 
 class Tag(models.Model):

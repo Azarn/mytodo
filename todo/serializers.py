@@ -1,6 +1,14 @@
+from django.utils.timezone import localtime
 from rest_framework import serializers
 
 from .models import Tag, Category, Todo
+
+
+class DateTimeTzAwareField(serializers.DateTimeField):
+    def to_representation(self, value, *args, **kwargs):
+        if value:
+            value = localtime(value)
+        return super().to_representation(value, *args, **kwargs)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -16,6 +24,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TodoSerializer(serializers.ModelSerializer):
+    deadline = DateTimeTzAwareField()
+
     class Meta:
         model = Todo
         fields = ('id', 'category', 'tags', 'text', 'is_done', 'deadline')

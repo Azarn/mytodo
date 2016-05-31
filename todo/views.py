@@ -5,9 +5,16 @@ from .serializers import CategorySerializer, TagSerializer, TodoSerializer
 from .models import Category, Tag, Todo
 
 
-class GenericApiViewNoOptions(generics.GenericAPIView):
+class MyGenericApiView(generics.GenericAPIView):
+    # Disabling options method
     metadata_class = None
 
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        from django.utils import timezone
+        timezone.activate(request.user.profile.timezone)
+
+    # Hiding options from available methods
     @property
     def allowed_methods(self):
         methods = super().allowed_methods
@@ -17,7 +24,7 @@ class GenericApiViewNoOptions(generics.GenericAPIView):
 
 class CategoryList(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
-                   GenericApiViewNoOptions):
+                   MyGenericApiView):
     serializer_class = CategorySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -37,7 +44,7 @@ class CategoryList(mixins.ListModelMixin,
 class CategoryDetail(mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin,
                      mixins.DestroyModelMixin,
-                     GenericApiViewNoOptions):
+                     MyGenericApiView):
     serializer_class = CategorySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -56,7 +63,7 @@ class CategoryDetail(mixins.RetrieveModelMixin,
 
 class TagList(mixins.ListModelMixin,
               mixins.CreateModelMixin,
-              GenericApiViewNoOptions):
+              MyGenericApiView):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -76,7 +83,7 @@ class TagList(mixins.ListModelMixin,
 class TagDetail(mixins.RetrieveModelMixin,
                 mixins.UpdateModelMixin,
                 mixins.DestroyModelMixin,
-                GenericApiViewNoOptions):
+                MyGenericApiView):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -95,7 +102,7 @@ class TagDetail(mixins.RetrieveModelMixin,
 
 class TodoList(mixins.ListModelMixin,
                mixins.CreateModelMixin,
-               GenericApiViewNoOptions):
+               MyGenericApiView):
     serializer_class = TodoSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -115,7 +122,7 @@ class TodoList(mixins.ListModelMixin,
 class TodoDetail(mixins.RetrieveModelMixin,
                  mixins.UpdateModelMixin,
                  mixins.DestroyModelMixin,
-                 GenericApiViewNoOptions):
+                 MyGenericApiView):
     serializer_class = TodoSerializer
     permission_classes = (permissions.IsAuthenticated,)
 

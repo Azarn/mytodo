@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'timezone_field',
     'rest_framework',
     'rest_framework.authtoken',
     'todo'
@@ -52,6 +53,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'todo.middleware.TimezoneMiddleware',
 ]
 
 ROOT_URLCONF = 'mytodo.urls'
@@ -109,6 +111,8 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
+    'DATETIME_FORMAT': '%d.%m.%Y %H:%M:%S',
+    'DATETIME_INPUT_FORMATS': ['iso-8601', '%d.%m.%Y %H:%M:%S'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
