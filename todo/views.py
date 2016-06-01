@@ -19,7 +19,8 @@ class MyGenericApiView(generics.GenericAPIView):
         super().initial(request, *args, **kwargs)
         timezone.activate(request.user.profile.timezone)
 
-    def _raise_invalid_param(self, param_name):
+    @staticmethod
+    def _raise_invalid_param(param_name):
         raise exceptions.ParseError('parameter `{0}` is invalid'.format(param_name))
 
     def parse_get_int(self, param_name, default=None):
@@ -38,7 +39,6 @@ class MyGenericApiView(generics.GenericAPIView):
                 self._raise_invalid_param(param_name)
             param = bool(param)
         return param
-
 
     # Hiding "options" from available methods
     @property
