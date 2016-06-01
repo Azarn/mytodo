@@ -108,11 +108,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+DATE_FORMAT = '%d.%m.%Y'
+TIME_FORMAT = '%H:%M:%S'
+DATETIME_FORMAT = DATE_FORMAT + ' ' + TIME_FORMAT
+
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
-    'DATETIME_FORMAT': '%d.%m.%Y %H:%M:%S',
-    'DATETIME_INPUT_FORMATS': ['iso-8601', '%d.%m.%Y %H:%M:%S'],
+    'DATETIME_FORMAT': DATETIME_FORMAT,
+    'DATETIME_INPUT_FORMATS': ['iso-8601', DATETIME_FORMAT],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',

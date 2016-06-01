@@ -1,7 +1,7 @@
 import logging
 
-from rest_framework import views, mixins, generics, permissions, response, status, settings
-from django.http import Http404
+from rest_framework import mixins, generics, permissions, exceptions
+from django.conf import settings
 from django.utils import timezone
 
 from .serializers import CategorySerializer, TagSerializer, TodoSerializer
@@ -18,6 +18,27 @@ class MyGenericApiView(generics.GenericAPIView):
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         timezone.activate(request.user.profile.timezone)
+
+    def _raise_invalid_param(self, param_name):
+        raise exceptions.ParseError('parameter `{0}` is invalid'.format(param_name))
+
+    def parse_get_int(self, param_name):
+        param = self.request.query_params.get(param_name)
+        if param is not None:
+            try:
+                param = int(param)
+            except ValueError:
+                self._raise_invalid_param(param_name)
+        return param
+
+    def parse_get_bool(self, param_name):
+        param = self.parse_get_int(param_name)
+        if param is not None:
+            if param not in (0, 1):
+                self._raise_invalid_param(param_name)
+            param = bool(param)
+        return param
+
 
     # Hiding "options" from available methods
     @property
@@ -112,23 +133,24 @@ class TodoList(mixins.ListModelMixin,
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        show = self.request.query_params.get('show')
+        q = Todo.objects.filter(user=self.request.user)
+        only_done = self.parse_get_bool('only_done')
+        only_one_day = self.parse_get_bool('only_one_day')
         category = self.request.query_params.get('category')
         tags = self.request.query_params.getlist('tags')
-        due_to = self.request.query_params.get('due_to')
+        by_date = self.request.query_params.get('by_date')
 
-        q = Todo.objects.filter(user=self.request.user)
-        if show is not None:
-            if show == 'done':
+        if only_done is not None:
+            if only_done:
                 q = q.filter(is_done=True)
-            elif show == 'not_done':
+            else:
                 q = q.filter(is_done=False)
 
         if category is not None:
             try:
                 category = int(category)
             except ValueError:
-                pass
+                raise exceptions.ParseError('parameter `category` is invalid')
             else:
                 q = q.filter(category__pk=category)
 
@@ -136,25 +158,31 @@ class TodoList(mixins.ListModelMixin,
             try:
                 tags = list(map(int, tags))
             except ValueError:
-                pass
+                raise exceptions.ParseError('parameter `tags` is invalid')
             else:
-                logger.warn('Tags: {0}'.format(tags))
                 for t in tags:
                     q = q.filter(tags__pk=t)
 
-        if due_to is not None:
-            today = timezone.datetime.combine(timezone.localtime(timezone.now()),
-                                              timezone.datetime.max.time())
-            today = timezone.make_aware(today)
-            if due_to == 'today':
-                q = q.filter(deadline__lte=today)
-            elif due_to == 'tomorrow':
-                today += timezone.timedelta(days=1)
-                q = q.filter(deadline__lte=today)
-            elif due_to == 'week':
-                today += timezone.timedelta(days=7)
-                q = q.filter(deadline__lte=today)
-            logger.warn(str(today))
+        if by_date is not None:
+            if by_date in ('today', 'tomorrow', 'week'):
+                date = timezone.localtime(timezone.now())
+            else:
+                try:
+                    date = timezone.datetime.strptime(by_date, settings.DATE_FORMAT)
+                except TypeError:
+                    raise exceptions.ParseError('parameter `by_date` is invalid')
+            date = timezone.make_aware(timezone.datetime.combine(date, timezone.datetime.max.time()))
+
+            if by_date == 'tomorrow':
+                date += timezone.timedelta(days=1)
+            elif by_date == 'week':
+                date += timezone.timedelta(days=6)
+            logger.warn(str(date))
+
+            if only_one_day is None or not only_one_day:
+                q = q.filter(deadline__lte=date)
+            else:
+                q = q.filter(deadline__date=date)
 
         return q.prefetch_related('tags')
 
