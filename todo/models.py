@@ -91,6 +91,9 @@ class Todo(models.Model):
             self.category = Category.get_or_create_default(self.user)
         super().save(*args, **kwargs)
 
+    class Meta:
+        ordering = ('deadline',)
+
 
 @receiver(pre_delete, sender=Category)
 def set_default_category_to_todo_set(sender, instance, **kwargs):
