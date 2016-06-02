@@ -81,7 +81,7 @@ class CategoryDetail(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        return self.update(request, *args, partial=True, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
@@ -120,7 +120,7 @@ class TagDetail(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        return self.update(request, *args, partial=True, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
@@ -130,7 +130,7 @@ class TodoList(mixins.ListModelMixin,
                mixins.CreateModelMixin,
                MyGenericApiView):
     serializer_class = TodoSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated)
 
     def get_queryset(self):
         """
@@ -192,7 +192,7 @@ class TodoList(mixins.ListModelMixin,
             logger.warn(str(date))
 
             if by_date == 'none':
-                q = q.filter(deadline=None)
+                q = q.filter(deadline__isnull=True)
             elif only_one_day:
                 q = q.filter(deadline__date=date)
             else:
@@ -215,7 +215,7 @@ class TodoDetail(mixins.RetrieveModelMixin,
                  mixins.DestroyModelMixin,
                  MyGenericApiView):
     serializer_class = TodoSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated)
 
     def get_queryset(self):
         return Todo.objects.filter(user=self.request.user)
@@ -224,7 +224,7 @@ class TodoDetail(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        return self.update(request, *args, partial=True, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)

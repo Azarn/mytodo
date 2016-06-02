@@ -89,6 +89,8 @@ class Todo(models.Model):
     def save(self, *args, **kwargs):
         if self.category_id is None:
             self.category = Category.get_or_create_default(self.user)
+        elif self.category.user.pk != self.user.pk:
+            raise ValidationError({'category': 'You do not own that category!'})
         super().save(*args, **kwargs)
 
     class Meta:
