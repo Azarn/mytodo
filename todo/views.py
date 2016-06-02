@@ -130,7 +130,7 @@ class TodoList(mixins.ListModelMixin,
                mixins.CreateModelMixin,
                MyGenericApiView):
     serializer_class = TodoSerializer
-    permission_classes = (permissions.IsAuthenticated)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         """
@@ -215,7 +215,7 @@ class TodoDetail(mixins.RetrieveModelMixin,
                  mixins.DestroyModelMixin,
                  MyGenericApiView):
     serializer_class = TodoSerializer
-    permission_classes = (permissions.IsAuthenticated)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         return Todo.objects.filter(user=self.request.user)
